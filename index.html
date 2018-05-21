@@ -5,10 +5,20 @@
 	<script src="https://d3js.org/d3.v5.min.js"></script>
 </head>
 <body>
-	<svg id="timeline">
+	<svg id="timeline" viewBox="0 0 800 20000">
 	</svg>
 </body>
 <script type="text/javascript">
-	
+	var parser = d3.timeParse("%Y-%m-%d");
+	var minDate = parser('2014-01-01');
+
+	var i = 0;
+	d3.csv("data/readbooks.csv", function(data) {
+		d3.select('#timeline')
+			.append('circle')
+				.attr('r', data['Number of Pages'] / 50.)
+				.attr('cy', 50 + 10 * d3.timeDay.count(minDate, parser(data['Date Read'])))
+				.attr('cx', 200);
+	});
 </script>
 </html>
