@@ -7,7 +7,8 @@
 </head>
 <body>
 	<ol class="nav">
-		<li class="year" year="2014">2014
+		<li class="year" year="2014">
+			<span class="yearname">2014</span>
 			<ul id="2014" hidden>
 				<li class="monthname">January</li>
 				<li class="monthname">February</li>
@@ -23,7 +24,8 @@
 				<li class="monthname">December</li>
 			</ul>
 		</li>
-		<li class="year" year="2015">2015
+		<li class="year" year="2015">
+			<span class="yearname">2015</span>
 			<ul id="2015" hidden>
 				<li class="monthname">January</li>
 				<li class="monthname">February</li>
@@ -39,7 +41,8 @@
 				<li class="monthname">December</li>
 			</ul>
 		</li>
-		<li class="year" year="2016"> 2016
+		<li class="year" year="2016">
+			<span class="yearname">2016</span>
 			<ul id="2016" hidden>
 				<li class="monthname">January</li>
 				<li class="monthname">February</li>
@@ -55,7 +58,8 @@
 				<li class="monthname">December</li>
 			</ul>
 		</li>
-		<li class="year" year="2017">2017
+		<li class="year" year="2017">
+			<span class="yearname">2017</span>
 			<ul id="2017" hidden>
 				<li class="monthname">January</li>
 				<li class="monthname">February</li>
@@ -79,11 +83,12 @@
 	var parser = d3.timeParse("%Y-%m-%d");
 	var dateFormat = d3.timeFormat("%b %d, %Y");
 	var anchorFormat = d3.timeFormat("%b_%Y");
-	var minDate = parser('2014-01-01');
+	var monthNameFormat = d3.timeFormat("%B");
+	var minDate = parser('2013-12-31');
 	var maxDate = parser('2020-01-01');
 	var cumsum = 0;
 
-	const CARDHEIGHT = 50;
+	const CARDHEIGHT = 25;
 
 	function processText(text) {
 		var firstParen = text.indexOf('(');
@@ -105,15 +110,62 @@
 
 	var group = {};
 	var lastData = {};
+	lastData.date = minDate;
 
 	d3.csv("data/readbooks.csv", function(data, i) {
+		// First, decide whether to add badges.
+		if(lastData.date.getYear() < parser(data['Date Read']).getYear() ) {
+			// Add year badge
+			d3.select('#timeline')
+			  .append('g')
+			    .attr('class', 'yearbadge')
+			    .attr('id', parser(data['Date Read']).getYear())
+			  .append('text')
+			    .attr('y', i * CARDHEIGHT + cumsum + 10 * d3.timeDay.count(minDate, parser(data['Date Read'])) )
+			    .attr('x', '50%')
+			    .attr('text-anchor', 'middle')
+			    .text(parser(data['Date Read']).getUTCFullYear())
+			    .style('fill', 'black')
+			    .style('font-size', '2em');
+			cumsum += 14;
+
+			d3.select('#timeline')
+			  .append('g')
+			    .attr('class', 'monthbadge')
+			    .attr('id', anchorFormat(parser(data['Date Read'])))
+			  .append('text')
+			    .attr('y', i * CARDHEIGHT + cumsum + 10 * d3.timeDay.count(minDate, parser(data['Date Read'])) )
+			    .attr('x', '50%')
+			    .attr('text-anchor', 'middle')
+			    .text(monthNameFormat(parser(data['Date Read'])))
+			    .style('fill', 'black')
+			    .style('font-size', '16px');
+
+			cumsum += 6;
+		}
+
+		if(lastData.date.getMonth() < parser(data['Date Read']).getMonth()) {
+			d3.select('#timeline')
+			  .append('g')
+			    .attr('class', 'monthbadge')
+			    .attr('id', anchorFormat(parser(data['Date Read'])))
+			  .append('text')
+			    .attr('y', i * CARDHEIGHT + cumsum + 10 * d3.timeDay.count(minDate, parser(data['Date Read'])) )
+			    .attr('x', '50%')
+			    .attr('text-anchor', 'middle')
+			    .text(monthNameFormat(parser(data['Date Read'])))
+			    .style('fill', 'black')
+			    .style('font-size', '16px');
+
+			cumsum += 6;
+		}
+
 		if( d3.timeDay.count(parser(data['Date Read']), maxDate) < 0 ) {
 			maxDate = parser(data['Date Read']);
 		}
 
-		group[i] = d3.select('#timeline').append('g');
+		group[i] = d3.select('#timeline').append('g').attr('class', 'bookcard');
 		if(i > 0) {
-			// Add beizer curve
 			group[i].insert('path')
 					.attr('d', function () {
 						var yPosNow = (i * CARDHEIGHT + 
@@ -204,8 +256,9 @@
 							 10 * d3.timeDay.count(minDate, parser(data['Date Read']))
 							 );
 		lastData.r = data['Number of Pages'] / 50.;
+		lastData.date = parser(data['Date Read']);
 
-		cumsum += data['Number of Pages'] / 25.;
+		cumsum += Math.max((data['Number of Pages'] / 25.) - CARDHEIGHT, 3);
 	});
 	console.log(maxDate, minDate);
 	d3.select('#timeline').attr('viewBox', "0 0 800 " + (10 * d3.timeDay.count(minDate, maxDate)));
@@ -219,11 +272,10 @@
 		});
 	});
 
-	var years = document.getElementsByClassName('year');
+	var years = document.getElementsByClassName('yearname');
 	[].forEach.call(years, (elt) => {
 		elt.addEventListener('click', (evt) => {
-			console.log(elt.childNodes[1]);
-			elt.childNodes[1].hidden = (true ^ elt.childNodes[1].hidden);
+			elt.parentNode.childNodes[3].hidden = (true ^ elt.parentNode.childNodes[3].hidden);
 		});
 	});
 </script>

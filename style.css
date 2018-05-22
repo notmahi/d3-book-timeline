@@ -4,18 +4,27 @@
 
 .rating {
 	font-size: 8pt;
-	font-color: LightGray;
+	font-color: lightgray;
 }
 
 .datefinished {
 	font-size: 8pt;
-	font-color: LightGray;
+	font-color: lightgray;
 }
 
 .nav {
 	position: fixed;
 	left: 20px;
 	top: 10px;
+
+	font-family: monospace;
+	font-size: 1.5em;
+	color: lightblue;
+}
+
+.nav .yearname:hover, .monthname:hover {
+	color: darkblue;
+	cursor: pointer;
 }
 
 ol {
