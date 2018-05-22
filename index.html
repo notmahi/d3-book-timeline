@@ -77,6 +77,9 @@
 		</li>
 	</ol>
 	<svg id="timeline" viewBox="0 0 800 20000">
+		<filter id="grayscale">
+          <feColorMatrix type="saturate" values="0.5"/>
+     	</filter>
 		<g id="path"></g>
 	</svg>
 </body>
@@ -189,7 +192,7 @@
 					})
 					.attr('stroke', 'lightgrey')
 					.attr('fill', 'lightgrey')
-					.attr('opacity', '0.33');
+					.attr('opacity', '0.2');
 		}
 
 		// Save map data
@@ -223,9 +226,9 @@
 								)
 							.attr('x', function() {
 								if(i % 2 == 0) {
-									return '35%';
+									return '30%';
 								} else {
-									return '65%';
+									return '70%';
 								}
 							})
 							.attr('text-anchor', function() {
@@ -239,11 +242,30 @@
 
 		var textBoxXCoord = function() {
 			if(i % 2 == 0) {
-				return '35%';
+				return '30%';
 			} else {
-				return '65%';
+				return '70%';
 			}
 		};
+
+		group[i].append('image')
+				  .attr('x', function() {
+							if(i % 2 == 0) {
+								return '31%';
+							} else {
+								return '64%';
+							}
+						})
+				  .attr('y', (-7 + i * CARDHEIGHT + 
+									 data['Number of Pages'] / 50. + 
+									 cumsum + 
+									 10 * d3.timeDay.count(minDate, parser(data['Date Read']))
+							 )
+						)
+				  .attr('width', '5%')
+				  .attr('xlink:href', 'covers/' + data['ISBN'] +'.jpg')
+				  .attr('opacity', '0.8')
+				  .attr('filter', 'url(#grayscale)');
 
 		textNode.append('tspan')
 				.text(processText(data['Title'])[0]);		
@@ -331,7 +353,6 @@
 		return [mapDateToPixel(parser(d.date)), // convert first colum column to Date
 			 	+d.speed];
 	}).then(function(data) {
-		console.log("Done");
 		// Make my own path
 		var PathString = "M 400 0 ";
 		var RevString = "L 400 0";
