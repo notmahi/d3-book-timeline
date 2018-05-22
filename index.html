@@ -3,22 +3,228 @@
 <head>
 	<title>Mahi's timeline</title>
 	<script src="https://d3js.org/d3.v5.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
+	<ol class="nav">
+		<li class="year" year="2014">2014
+			<ul id="2014" hidden>
+				<li class="monthname">January</li>
+				<li class="monthname">February</li>
+				<li class="monthname">March</li>
+				<li class="monthname">April</li>
+				<li class="monthname">May</li>
+				<li class="monthname">June</li>
+				<li class="monthname">July</li>
+				<li class="monthname">August</li>
+				<li class="monthname">September</li>
+				<li class="monthname">October</li>
+				<li class="monthname">November</li>
+				<li class="monthname">December</li>
+			</ul>
+		</li>
+		<li class="year" year="2015">2015
+			<ul id="2015" hidden>
+				<li class="monthname">January</li>
+				<li class="monthname">February</li>
+				<li class="monthname">March</li>
+				<li class="monthname">April</li>
+				<li class="monthname">May</li>
+				<li class="monthname">June</li>
+				<li class="monthname">July</li>
+				<li class="monthname">August</li>
+				<li class="monthname">September</li>
+				<li class="monthname">October</li>
+				<li class="monthname">November</li>
+				<li class="monthname">December</li>
+			</ul>
+		</li>
+		<li class="year" year="2016"> 2016
+			<ul id="2016" hidden>
+				<li class="monthname">January</li>
+				<li class="monthname">February</li>
+				<li class="monthname">March</li>
+				<li class="monthname">April</li>
+				<li class="monthname">May</li>
+				<li class="monthname">June</li>
+				<li class="monthname">July</li>
+				<li class="monthname">August</li>
+				<li class="monthname">September</li>
+				<li class="monthname">October</li>
+				<li class="monthname">November</li>
+				<li class="monthname">December</li>
+			</ul>
+		</li>
+		<li class="year" year="2017">2017
+			<ul id="2017" hidden>
+				<li class="monthname">January</li>
+				<li class="monthname">February</li>
+				<li class="monthname">March</li>
+				<li class="monthname">April</li>
+				<li class="monthname">May</li>
+				<li class="monthname">June</li>
+				<li class="monthname">July</li>
+				<li class="monthname">August</li>
+				<li class="monthname">September</li>
+				<li class="monthname">October</li>
+				<li class="monthname">November</li>
+				<li class="monthname">December</li>
+			</ul>
+		</li>
+	</ol>
 	<svg id="timeline" viewBox="0 0 800 20000">
 	</svg>
 </body>
 <script type="text/javascript">
 	var parser = d3.timeParse("%Y-%m-%d");
+	var dateFormat = d3.timeFormat("%b %d, %Y");
+	var anchorFormat = d3.timeFormat("%b_%Y");
 	var minDate = parser('2014-01-01');
+	var maxDate = parser('2020-01-01');
+	var cumsum = 0;
 
-	var i = 0;
-	d3.csv("data/readbooks.csv", function(data) {
-		d3.select('#timeline')
+	const CARDHEIGHT = 50;
+
+	function processText(text) {
+		var firstParen = text.indexOf('(');
+		if(firstParen >= 0)
+			return [text.substring(0, firstParen - 1), text.substring(firstParen)];
+		else {
+			firstParen = text.indexOf(':');
+			if(firstParen >= 0)
+				return [text.substring(0, firstParen + 1), text.substring(firstParen+1)];
+			else {
+				return [text, ""];
+			}
+		}
+	}
+
+	function rating(numStars) {
+		return 'My rating: ' + '★'.repeat(numStars);
+	}
+
+	var group = {};
+	var lastData = {};
+
+	d3.csv("data/readbooks.csv", function(data, i) {
+		if( d3.timeDay.count(parser(data['Date Read']), maxDate) < 0 ) {
+			maxDate = parser(data['Date Read']);
+		}
+
+		group[i] = d3.select('#timeline').append('g');
+		if(i > 0) {
+			// Add beizer curve
+			group[i].insert('path')
+					.attr('d', function () {
+						var yPosNow = (i * CARDHEIGHT + 
+									 data['Number of Pages'] / 50. + 
+									 cumsum + 
+									 10 * d3.timeDay.count(minDate, parser(data['Date Read']))
+									 );
+						return 'M ' + (400 - lastData.r) + ' ' + lastData.cy + 
+							   ' Q ' + 403 + ' ' + (lastData.cy + yPosNow) / 2. + ', '
+							   		 + (400 - data['Number of Pages'] / 50.) + ' '
+							         + yPosNow + 
+							   ' L ' + (400 + data['Number of Pages'] / 50.) + ' '
+							         + yPosNow + 
+							   ' Q ' + 397 + ' ' + (lastData.cy + yPosNow) / 2. + ', '+ (400 + lastData.r) + ' ' + lastData.cy +
+							    ' L ' + (400 - lastData.r) + ' ' + + lastData.cy;
+					})
+					.attr('stroke', 'lightgrey')
+					.attr('fill', 'lightgrey')
+					.attr('opacity', '0.33');
+		}
+		group[i]
 			.append('circle')
 				.attr('r', data['Number of Pages'] / 50.)
-				.attr('cy', 50 + 10 * d3.timeDay.count(minDate, parser(data['Date Read'])))
-				.attr('cx', 200);
+				.attr('cy', (i * CARDHEIGHT + 
+							 data['Number of Pages'] / 50. + 
+							 cumsum + 
+							 10 * d3.timeDay.count(minDate, parser(data['Date Read']))
+							 )
+					)
+				.attr('cx', '50%');
+
+		var textNode = group[i]
+						.append('a')
+						.attr('id', anchorFormat(parser(data['Date Read'])))
+						.append('text')
+							.attr('y', (i * CARDHEIGHT + 
+									 data['Number of Pages'] / 50. + 
+									 cumsum + 
+									 10 * d3.timeDay.count(minDate, parser(data['Date Read']))
+									 )
+								)
+							.attr('x', function() {
+								if(i % 2 == 0) {
+									return '35%';
+								} else {
+									return '65%';
+								}
+							})
+							.attr('text-anchor', function() {
+								if(i % 2 == 0) {
+									return 'end';
+								} else {
+									return 'start';
+								}
+							})
+							.attr('class', 'booktitle');
+
+		var textBoxXCoord = function() {
+			if(i % 2 == 0) {
+				return '35%';
+			} else {
+				return '65%';
+			}
+		};
+
+		textNode.append('tspan')
+				.text(processText(data['Title'])[0]);		
+		textNode.insert('tspan')
+				.text(processText(data['Title'])[1])
+				.attr('x', textBoxXCoord())
+				.attr('dy', 18);
+
+		textNode.insert('tspan')
+				.text(rating(data['My Rating']))
+				.attr('class', 'rating')
+				.attr('x', textBoxXCoord())
+				.attr('dy', 15);
+
+		textNode.insert('tspan')
+				.text(dateFormat(parser(data['Date Read'])))
+				.attr('class', 'datefinished')
+				.attr('x', textBoxXCoord())
+				.attr('dy', 15);
+
+		lastData.cy = (i * CARDHEIGHT + 
+							 data['Number of Pages'] / 50. + 
+							 cumsum + 
+							 10 * d3.timeDay.count(minDate, parser(data['Date Read']))
+							 );
+		lastData.r = data['Number of Pages'] / 50.;
+
+		cumsum += data['Number of Pages'] / 25.;
+	});
+	console.log(maxDate, minDate);
+	d3.select('#timeline').attr('viewBox', "0 0 800 " + (10 * d3.timeDay.count(minDate, maxDate)));
+
+	var months = document.getElementsByClassName('monthname');
+	[].forEach.call(months, (elt) => {
+		elt.addEventListener('click', function(evt) {
+			var linkTo = evt.target.innerText.substring(0, 3) + '_' + evt.target.parentNode.parentNode.getAttribute("year");
+			var svgNode = document.getElementById(linkTo);
+			window.scrollBy(0, svgNode.getBoundingClientRect().y - 10);
+		});
+	});
+
+	var years = document.getElementsByClassName('year');
+	[].forEach.call(years, (elt) => {
+		elt.addEventListener('click', (evt) => {
+			console.log(elt.childNodes[1]);
+			elt.childNodes[1].hidden = (true ^ elt.childNodes[1].hidden);
+		});
 	});
 </script>
 </html>

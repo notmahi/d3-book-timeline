@@ -1,0 +1,24 @@
+.booktitle {
+	font-size: 10pt;
+}
+
+.rating {
+	font-size: 8pt;
+	font-color: LightGray;
+}
+
+.datefinished {
+	font-size: 8pt;
+	font-color: LightGray;
+}
+
+.nav {
+	position: fixed;
+	left: 20px;
+	top: 10px;
+}
+
+ol {
+	list-style-type: none;
+	text-decoration-color: blue;
+}
